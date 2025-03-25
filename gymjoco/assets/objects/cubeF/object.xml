@@ -1,0 +1,24 @@
+<mujoco model="cubeF">
+  <default>
+    <default class="visual">
+      <geom group="2" type="mesh" contype="0" conaffinity="0"/>
+    </default>
+    <default class="collision">
+      <geom group="3" type="box"/>
+    </default>
+  </default>
+  <asset>
+    <material name="Material" specular="1.0" shininess="0.09607843099999999" rgba="1.000000 1.000000 1.000000 1.000000"/>
+    <material name="Material.001" specular="0.0" shininess="0.09607843099999999" rgba="0.000000 0.000000 0.000000 1.000000"/>
+    <mesh file="cubeF_0.obj"/>
+    <mesh file="cubeF_1.obj"/>
+  </asset>
+  <worldbody>
+    <body name="cubeF">
+      <geom mesh="cubeF_0" material="Material.001" class="visual"/>
+      <geom mesh="cubeF_1" material="Material" class="visual" rgba="1 0 1 1"/>
+      <geom mesh="cubeF_0" class="collision"/>
+      <geom mesh="cubeF_1" class="collision" name="cubeF"/>
+    </body>
+  </worldbody>
+</mujoco>

@@ -1,0 +1,26 @@
+<mujoco model="cubeA">
+    <default>
+        <default class="visual">
+            <geom group="2" type="mesh" contype="0" conaffinity="0"/>
+        </default>
+        <default class="collision">
+            <geom group="3" type="box"/>
+        </default>
+    </default>
+    <asset>
+        <material name="Material" specular="1.0" shininess="0.09607843099999999"
+                  rgba="1.000000 1.000000 1.000000 1.000000" texuniform="true"/>
+        <material name="Material.001" specular="0.0" shininess="0.09607843099999999"
+                  rgba="0.000000 0.000000 0.000000 1.000000" texuniform="true"/>
+        <mesh file="meshes/cubeA_0.obj"/>
+        <mesh file="meshes/cubeA_1.obj"/>
+    </asset>
+    <worldbody>
+        <body name="cubeA">
+            <geom mesh="cubeA_0" material="Material.001" class="visual"/>
+            <geom mesh="cubeA_1" material="Material" class="visual" rgba="1 0 0 1"/>
+            <geom mesh="cubeA_0" class="collision"/>
+            <geom mesh="cubeA_1" class="collision" name="cubeA"/>
+        </body>
+    </worldbody>
+</mujoco>

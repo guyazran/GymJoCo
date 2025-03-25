@@ -1,0 +1,30 @@
+<mujoco model="bin_dark_wood">
+    <asset>
+        <texture file="textures/dark-wood.png" type="2d" name="tex-dark-wood" />
+        <material name="dark-wood" reflectance="0.7" texrepeat="15 15" texture="tex-dark-wood"
+            texuniform="true" />
+    </asset>
+    <worldbody>
+        <body name="bin_dark_wood">
+            <!-- bottom -->
+            <geom pos="0 0 0" size="0.1 0.125 0.02" type="box" group="0" friction="1 0.005 0.0001" rgba="1 0 0 0" />
+            <geom pos="0 0 0" size="0.1 0.125 0.02" type="box" conaffinity="0" contype="0" group="1" material="dark-wood" />
+            
+            <!-- side 1 -->
+            <geom pos="0 0.125 0.05" size="0.105 0.01 0.05" type="box" group="0" friction="1 0.005 0.0001" rgba="1 0 0 0" />
+            <geom pos="0 0.125 0.05" size="0.105 0.01 0.05" type="box" conaffinity="0" contype="0" group="1" material="dark-wood" />
+
+            <!-- side 2 -->
+            <geom pos="0 -0.125 0.05" size="0.105 0.01 0.05" type="box" group="0" friction="1 0.005 0.0001" rgba="1 0 0 0" />
+            <geom pos="0 -0.125 0.05" size="0.105 0.01 0.05" type="box" conaffinity="0" contype="0" group="1" material="dark-wood" />
+
+            <!-- side 3 -->
+            <geom pos="0.1 0 0.05" size="0.01 0.125 0.05" type="box" group="0" friction="1 0.005 0.0001" rgba="1 0 0 0" />
+            <geom pos="0.1 0 0.05" size="0.01 0.125 0.05" type="box" conaffinity="0" contype="0" group="1" material="dark-wood" />
+
+            <!-- side 4 -->
+            <geom pos="-0.1 0 0.05" size="0.01 0.125 0.05" type="box" group="0" friction="1 0.005 0.0001" rgba="1 0 0 0" />
+            <geom pos="-0.1 0 0.05" size="0.01 0.125 0.05" type="box" conaffinity="0" contype="0" group="1" material="dark-wood" />
+        </body>
+    </worldbody>
+</mujoco>

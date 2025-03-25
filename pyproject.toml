@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools >= 61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]  # defines all the package metadata
+dynamic = ["version", "dependencies"]  # metadata to be read from a file or the package itself (see [tool.setuptools.dynamic])
+name = "GymJoCo"
+authors = [
+    { name = "Guy Azran", email = "guy.azran@intel.com" },
+]
+description = "A modular MuJoCo environment with a user-friendly API."
+keywords = ["Simulation", "Robotics", "Animation", "Decision-Making"]
+readme = "README.md"
+requires-python = ">= 3.10"
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Programming Language :: Python"
+]
+license = { file = "LICENSE.txt" }
+
+[project.urls]
+Repository = "https://github.com/my-account/bench3d"
+
+[tool.setuptools.dynamic]
+version = { attr = "gymjoco._version.__version__" }
+dependencies = { file = ["requirements.txt"] }
+
+[project.optional-dependencies]
+dev = ["pytest"]
+
+[tool.setuptools.packages.find]
+exclude = ["examples"]

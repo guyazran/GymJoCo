@@ -1,0 +1,19 @@
+<mujoco model="bin_red">
+    <worldbody>
+        <body name="bin_red">
+            <!-- bottom -->
+            <geom pos="0 0 0" size="0.1 0.125 0.02" type="box" friction="1 0.005 0.0001"
+                rgba="1 0 0 1" />
+
+            <!-- sides -->
+            <geom pos="0 0.125 0.05" size="0.105 0.01 0.05" type="box" group="0"
+                friction="1 0.005 0.0001" rgba="1 0 0 1" />
+            <geom pos="0 -0.125 0.05" size="0.105 0.01 0.05" type="box" group="0"
+                friction="1 0.005 0.0001" rgba="1 0 0 1" />
+            <geom pos="0.1 0 0.05" size="0.01 0.125 0.05" type="box" group="0"
+                friction="1 0.005 0.0001" rgba="1 0 0 1" />
+            <geom pos="-0.1 0 0.05" size="0.01 0.125 0.05" type="box" group="0"
+                friction="1 0.005 0.0001" rgba="1 0 0 1" />
+        </body>
+    </worldbody>
+</mujoco>
