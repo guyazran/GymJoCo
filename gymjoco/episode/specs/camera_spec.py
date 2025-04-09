@@ -9,6 +9,7 @@ from ...common.defs.types import Identifier
 class CameraType(Enum):
     RGB = 'rgb'
     DEPTH = 'depth'
+    RGBD = 'rgbd'
     SEGMENTATION = 'segmentation'
 
 
@@ -16,10 +17,11 @@ class CameraType(Enum):
 class CameraSpec(Spec):
     identifier: Identifier
     type: InitVar[CameraType] = CameraType.RGB
-    height: Optional[int] = None  #TODO make these required
+    height: Optional[int] = None  # TODO make these required
     width: Optional[int] = None
     depth: bool = field(init=False)
     segmentation: bool = field(init=False)
+    rgbd: bool = field(init=False)
 
     def __post_init__(self, type: CameraType):
         if isinstance(type, str):
@@ -27,3 +29,4 @@ class CameraSpec(Spec):
 
         super().__setattr__('depth', type == CameraType.DEPTH)
         super().__setattr__('segmentation', type == CameraType.SEGMENTATION)
+        super().__setattr__('rgbd', type == CameraType.RGBD)

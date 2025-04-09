@@ -1,6 +1,7 @@
 episodes:
   - scene: pushworld
-    robot: arm
+    robots:
+      arm: arm
     task:
       cls: gymjoco.tasks.rearrangement.rearrangement_task:COMRearrangementTask
       params:

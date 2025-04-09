@@ -9,8 +9,8 @@ from gymjoco.tasks.rearrangement.rearrangement_task import COMRearrangementTask
 
 
 class RandomClutter(MultiTaskEpisodeSampler):
-    def __init__(self, scene, robot, obs_heights, obj_heights):
-        super().__init__(scene, robot)
+    def __init__(self, scene, robots, obs_heights, obj_heights):
+        super().__init__(scene, robots)
         self.obj_heights = obj_heights
         self.obs_heights = obs_heights
 
@@ -48,13 +48,13 @@ class RandomClutter(MultiTaskEpisodeSampler):
 env = GymJoCoEnv(
     episode_sampler=RandomClutter(
         SceneSpec('multiobjworld', init_keyframe='home'),
-        RobotSpec('mujoco_menagerie/universal_robots_ur5e/ur5e.xml',
+        {"UR5":RobotSpec('mujoco_menagerie/universal_robots_ur5e/ur5e.xml',
                   attachments=[
                       # AttachmentSpec('mujoco_menagerie/shadow_hand/left_hand.xml',
                       #                base_rot=np.array([np.pi, np.pi/2, 0])),
                       AttachmentSpec('mujoco_menagerie/robotiq_2f85/2f85.xml')
                   ]
-                  ),
+                  )},
         obs_heights=dict(zip(range(4), [0.3, 0.3, 0.3, 0.3])),
         obj_heights={'red': 0.05, 'yellow': 0.05, 'cyan': 0.05}
     ),

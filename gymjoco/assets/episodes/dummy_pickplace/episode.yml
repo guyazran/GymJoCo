@@ -1,8 +1,9 @@
 globals:
   scene: floorworld
-  robot:
-    resource: ur5e
-    attachments: adhesive_gripper
+  robots:
+    ur5e:
+      resource: ur5e
+      attachments: adhesive_gripper
   task:
     cls: gymjoco.tasks.rearrangement.rearrangement_task:COMRearrangementTask
     params:

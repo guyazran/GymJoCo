@@ -1,8 +1,9 @@
 globals:
   scene: paddleworld
-  robot:
-    resource: brick
-    init_pos: [ -1, 0, 0, 0, 0 ,0 ]
+  robots:
+    brick:
+      resource: brick
+      init_pos: [ -1, 0, 0, 0, 0 ,0 ]
   task:
     cls: gymjoco.tasks.rearrangement.rearrangement_task:COMRearrangementTask
     params:

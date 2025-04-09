@@ -23,10 +23,11 @@ scene = SceneSpec(
 
 cfg = dict(
     scene=scene,
-    robot={
-        cfg_keys.RESOURCE: 'ur5e',
-        cfg_keys.ROBOT_MOUNT: 'rethink_stationary',
-        cfg_keys.ROBOT_ATTACHMENTS: 'adhesive_gripper'
+    robots={"ur5": {
+            cfg_keys.RESOURCE: 'ur5e',
+            cfg_keys.ROBOT_MOUNT: 'rethink_stationary',
+            cfg_keys.ROBOT_ATTACHMENTS: 'adhesive_gripper'
+        }
     },
     task=NullTask,
 )

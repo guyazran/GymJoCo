@@ -7,7 +7,8 @@ import numpy as np
 import numpy.typing as npt
 
 from .entity import Entity
-from ..common import InfoDict
+from ..episode.specs.robot_spec import RobotSpec
+from ..common.defs.types import InfoDict
 from ..episode.specs.camera_spec import CameraSpec
 from ..rendering import OffscreenRenderer
 
@@ -35,14 +36,15 @@ class RobotAgent:
             in the model over which the agent has control.
     """
 
-    def __init__(self, sim: Simulator):
+    def __init__(self, name : str, sim: Simulator):
         """
         Creates a new agent object for the simulation robot.
+        :param name: The robot's unique identifier.
         :param sim: The simulation in which the robot resides.
         """
         # TODO agent spec to determine agent sensors and actuators instead of robot spec
-
-        self.spec = sim.robot
+        self.name = name
+        self.spec: RobotSpec = sim.robots[name]
         self.entity = Entity(sim.composer.get_mounted_robot(self.spec), sim.physics)
         self.sensor_map = {
             f'{sensor.element_tag}::{sensor.identifier}': sensor
@@ -98,7 +100,12 @@ class RobotAgent:
             for name, sensor in self.sensor_map.items()
         })
 
-        # merge to dictionary observation
+        # set camera observations
+        spaces.update({
+            name: cam.sensordata_space
+            for name, cam in self.camera_map.items()
+        })
+
         return gym.spaces.Dict(spaces)
 
     @property
@@ -160,7 +167,10 @@ class RobotAgent:
                                      depth=cam_spec.depth, segmentation=cam_spec.segmentation)
 
         dims = f'{renderer.viewer.height}X{renderer.viewer.width}'
-        img_type = 'segmentation' if cam_spec.segmentation else 'depth' if cam_spec.depth else 'rgb'
+        img_type = ('segmentation' if cam_spec.segmentation
+                    else 'depth' if cam_spec.depth
+                    else 'rgbd' if cam_spec.rgbd
+                    else'rgb')
 
         name = f'camera_{identifier}_{dims}_{img_type}'
 

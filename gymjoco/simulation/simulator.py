@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Dict
 
 from dm_control import mjcf
 import mujoco
@@ -18,13 +18,13 @@ class Simulator:
     """
     An interface for initializing and interacting with MuJoCo simulations.
 
-    A `Simulator` instance uses a specifications for a scene and a robot to compose a model for the simulation.
+    A `Simulator` instance uses a specifications for a scene and a robots to compose a model for the simulation.
     Specifications are defined according to the spec dataclasses (see gymjoco.episode.specs). A specification points
     to MJCF (XML) asset files that are loaded and merged according to the specification details.
 
     public fields:
-        - scene / robot:
-            The scene and robot specification instances set at instance construction or using the `swap_specs` method.
+        - scene / robots:
+            The scene and robots specification instances set at instance construction or using the `swap_specs` method.
 
         - composer:
             An MJCF composition tool for merging episode-specific MJCF files.
@@ -56,7 +56,7 @@ class Simulator:
             Swaps the scene and robot specifications of the simulation.
 
         - get_agent:
-            Creates a new RobotAgent instance for the robot in the simulation.
+            Creates new RobotAgent instances for the robots in the simulation.
 
         - get_privileged_info:
             Constructs an information dictionary containing privileged information.
@@ -68,16 +68,16 @@ class Simulator:
             Get an `Entity` object bound to an element in the simulation.
     """
 
-    def __init__(self, scene: SceneSpec, robot: RobotSpec) -> None:
+    def __init__(self, scene: SceneSpec, robots: Dict[str, RobotSpec]) -> None:
         """
         Creates a new MuJoCo simulation according to the given scene and robot specifications.
         :param scene: the scene specification.
-        :param robot: the robot specification.
+        :param robots: a dictionary of robot specifications.
         """
 
         # set scene and robot specifications
         self.scene = scene
-        self.robot = robot
+        self.robots = robots
 
         # declare MJCF composition tool
         self.composer = MJCFComposer()
@@ -151,33 +151,32 @@ class Simulator:
         # set initial state for individual entities in the model (overrides keyframe)
         self.__set_init_state()
 
-    def swap_specs(self, scene: SceneSpec, robot: RobotSpec) -> None:
+    def swap_specs(self, scene: SceneSpec, robots: Dict[str, RobotSpec]) -> None:
         """
-        Swaps the scene and robot specifications of the simulation. This method is used to change the scene and robot
-        such that the simulation is reinitialized only when it is absolutely necessary.
+        Swaps the scene and robot specifications of the simulation to accommodate multiple robots.
+        This method is used to change the scene and robots such that the simulation is reinitialized
+        only when it is absolutely necessary.
         :param scene: the new scene specification.
-        :param robot: the new robot specification.
+        :param robots: a dictionary of new robot specifications.
         """
         # swap scene and robot
         self.scene, scene = scene, self.scene
-        self.robot, robot = robot, self.robot
+        self.robots, robots = robots, self.robots
 
         # check if new model required
         if (SceneSpec.require_different_models(self.scene, scene) or
-                RobotSpec.require_different_models(self.robot, robot)):
+                any(RobotSpec.require_different_models(self.robots[name], robots[name])
+                    for name in self.robots.keys() & robots.keys())):
             self.initialize()
         else:
             # swap composer spec keys
             # it is enough to swap only the scene objects and the robot (+attachments) since they make up all the
             # keys in the internal composer dictionary
-            self.composer.swap_spec_ids(self.scene.objects, scene.objects, [self.robot], [robot])
+            self.composer.swap_spec_ids(self.scene.objects, scene.objects, self.robots.values(), robots.values())
 
-    def get_agent(self) -> RobotAgent:
-        """
-        Creates a new RobotAgent instance for the robot in the simulation.
-        :return: A new RobotAgent instance for the robot in the simulation.
-        """
-        return RobotAgent(self)
+    def get_agents(self) -> Dict[str, RobotAgent]:
+        """Create and return RobotAgent instances for each robot."""
+        return {name: RobotAgent(name, self) for name, robot in self.robots.items()}
 
     def get_privileged_info(self) -> InfoDict:
         """
@@ -213,7 +212,8 @@ class Simulator:
 
     def __compose_mjcf(self):
         self.composer.set_base_scene(self.scene)
-        self.composer.attach_robot(self.robot)
+        for robot_name, robot_spec in self.robots.items():
+            self.composer.attach_robot(robot_spec)
         self.keyframes = self.composer.extract_keyframes()
 
     def __set_keyframe_state(self):
@@ -239,3 +239,6 @@ class Simulator:
         for obj in self.scene.objects:
             addon_body = Entity(self.composer.get_object(obj), self.physics)
             addon_body.configure_joints(obj.init_pos, obj.init_vel)
+
+        for agent in self.get_agents().values():
+            agent.reset()

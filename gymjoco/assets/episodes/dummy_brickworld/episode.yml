@@ -1,6 +1,8 @@
 globals:
   scene: floatworld
-  robot: brick
+  robots:
+    brick:
+      brick
   task:
     cls: gymjoco.tasks.rearrangement.rearrangement_task:COMRearrangementTask
     params:

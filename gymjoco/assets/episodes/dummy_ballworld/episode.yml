@@ -1,7 +1,8 @@
 globals:
   scene: floatworld
-  robot:
-    resource: ball
+  robots:
+    ball:
+      resource: ball
   task:
     cls: gymjoco.tasks.rearrangement.rearrangement_task:COMRearrangementTask
     params:

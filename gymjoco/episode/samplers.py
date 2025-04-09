@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Optional, Any, Type, Sequence, Collection
+from typing import Optional, Any, Type, Sequence, Collection, Dict
 
 import numpy as np
 import yaml
@@ -67,18 +67,18 @@ class SingleEpisodeSampler(EpisodeSampler):
 class MultiTaskEpisodeSampler(EpisodeSampler, ABC):
     """An episode sampler for changing tasks and a constant scene and robot."""
 
-    def __init__(self, scene: SceneSpec, robot: RobotSpec) -> None:
+    def __init__(self, scene: SceneSpec, robots: Dict[str, RobotSpec]) -> None:
         """
         Creates a new sampler for a single scene-robot pair.
         :param scene: The scene specification.
         :param robot: The robot specification.
         """
         self.scene = scene
-        self.robot = robot
+        self.robots = robots
 
     def sample(self) -> EpisodeSpec:
         return EpisodeSpec(scene=self.scene,
-                           robot=self.robot,
+                           robots=self.robots,
                            task=self._sample_task())
 
     @abstractmethod

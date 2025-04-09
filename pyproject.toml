@@ -27,6 +27,7 @@ dependencies = { file = ["requirements.txt"] }
 
 [project.optional-dependencies]
 dev = ["pytest"]
+rl = ["stable-baselines3"]
 
 [tool.setuptools.packages.find]
 exclude = ["examples"]

@@ -18,7 +18,7 @@ RESOURCE = 'resource'
 #####################
 
 SCENE = 'scene'
-ROBOT = 'robot'
+ROBOTS = 'robots'
 TASK = 'task'
 
 ###################

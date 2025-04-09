@@ -1,7 +1,5 @@
 from __future__ import annotations
-
 from typing import Union, TypeVar
-
 from .specs import *
 from ..common.defs.cfg_keys import *
 from ..common.defs.types import Asset, Config
@@ -38,10 +36,9 @@ def episode_from_cfg(cfg: Config) -> EpisodeSpec:
     :return: an episode specification matching the given values in `cfg` and spec defaults.
     """
     scene = scene_spec_from_name_or_cfg(cfg[SCENE])
-    robot = robot_spec_from_name_or_cfg(cfg[ROBOT])
+    robots = {name: robot_spec_from_name_or_cfg(robot_cfg) for name, robot_cfg in cfg[ROBOTS].items()}
     task = task_spec_from_name_or_cfg(cfg[TASK])
-
-    return EpisodeSpec(scene, robot, task)
+    return EpisodeSpec(scene, robots, task)
 
 
 def scene_spec_from_name_or_cfg(asset_or_cfg: AssetOrConfig) -> SceneSpec:
@@ -68,7 +65,6 @@ def robot_spec_from_name_or_cfg(asset_or_cfg: AssetOrConfig) -> RobotSpec:
     if isinstance(asset_or_cfg, dict) and ROBOT_ATTACHMENTS in asset_or_cfg:
         asset_or_cfg[ROBOT_ATTACHMENTS] = __list_or_single_from_name_or_cfg(asset_or_cfg[ROBOT_ATTACHMENTS],
                                                                             AttachmentSpec)
-
     return __type_from_name_or_cfg(asset_or_cfg, RobotSpec)
 
 

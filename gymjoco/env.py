@@ -1,10 +1,7 @@
 from __future__ import annotations
-
-from typing import Optional, SupportsFloat, Any, Literal
-
+from typing import Optional, SupportsFloat, Any, Literal, Dict
 import numpy as np
-from gymnasium import Env
-from gymnasium import spaces
+from gymnasium import Env, spaces
 from gymnasium.core import ActType, ObsType
 from gymnasium.utils import EzPickle
 
@@ -15,6 +12,7 @@ from .rendering import BaseRenderer, WindowRenderer, OffscreenRenderer
 from .simulation.robot_agent import RobotAgent
 from .simulation.simulator import Simulator
 from .tasks.task import Task
+from .rendering import BaseRenderer, WindowRenderer, OffscreenRenderer
 
 
 class GymJoCoEnv(Env, EzPickle):
@@ -48,7 +46,7 @@ class GymJoCoEnv(Env, EzPickle):
         # declare empty env variables. will be set upon environment reset
         self.episode: Optional[EpisodeSpec] = None
         self.sim: Optional[Simulator] = None
-        self.agent: Optional[RobotAgent] = None
+        self.agents: Optional[Dict[str, RobotAgent]] = None
         self.task: Optional[Task] = None
         self.renderer: Optional[BaseRenderer] = None
         self.multi_renderers: dict[str, BaseRenderer] = {}
@@ -73,7 +71,7 @@ class GymJoCoEnv(Env, EzPickle):
             cfg: Config,
             render_mode: Optional[Literal['human', 'rgb_array', 'segmentation', 'depth_array']] = None,
             frame_skip: int = 1,
-            reset_on_init: bool = True
+            reset_on_init: bool = True,
     ) -> GymJoCoEnv:
         return cls(CfgEpisodeSampler(cfg), render_mode, frame_skip, reset_on_init)
 
@@ -83,15 +81,17 @@ class GymJoCoEnv(Env, EzPickle):
             cfg_file: FilePath,
             render_mode: Optional[Literal['human', 'rgb_array', 'segmentation', 'depth_array']] = None,
             frame_skip: int = 1,
-            reset_on_init: bool = True
-    ):
+            reset_on_init: bool = True,
+    ) -> GymJoCoEnv:
         return cls(CfgFileEpisodeSampler(cfg_file), render_mode, frame_skip, reset_on_init)
 
     # ===================================
     # ========== Gymnasium API ==========
     # ===================================
 
-    def step(self, action: ActType) -> tuple[ObsType, SupportsFloat, bool, bool, dict[str, Any]]:
+    def step(self, action: Dict[str, ActType]) -> tuple[
+        Dict[str, ObsType], Dict[str, SupportsFloat], Dict[str, bool], bool, dict[str, Any]]:
+
         # run task pre-step callback
         self.task.begin_frame(action)
 
@@ -102,7 +102,7 @@ class GymJoCoEnv(Env, EzPickle):
         self.task.end_frame(action)
 
         return (
-            self.agent.get_obs(),  # get agent observation
+            {agent_name: agent.get_obs() for agent_name, agent in self.agents.items()},  # get agent observation
             self.task.score(),  # get task reward
             self.task.is_done(),  # check if task is done
             False,  # env is never truncated internally
@@ -126,13 +126,14 @@ class GymJoCoEnv(Env, EzPickle):
             self.sim.reset()
 
             # reset the agent state in the simulation (overrides keyframe data)
-            self.agent.reset()
+            for agent in self.agents.values():
+                agent.reset()
 
             # reset task to episode parameters (overrides keyframe data and agent state)
             # with self.sim.physics.reset_context():
             self.task.reset(**self.episode.task.params)
 
-        return self.agent.get_obs(), self.__get_info_dict()
+        return {agent_name: agent.get_obs() for agent_name, agent in self.agents.items()}, self.__get_info_dict()
 
     def render(self, camera=None):
         if self.render_mode is None:
@@ -188,7 +189,7 @@ class GymJoCoEnv(Env, EzPickle):
             self.initialize_simulation()
         else:
             # no new model required. swap new specifications
-            self.sim.swap_specs(self.episode.scene, self.episode.robot)
+            self.sim.swap_specs(self.episode.scene, self.episode.robots)
 
         # check requirement for new task
         if episode is None or self.task is None or episode.task.cls != self.episode.task.cls:
@@ -196,33 +197,32 @@ class GymJoCoEnv(Env, EzPickle):
             self.task = self.episode.task.cls(self.sim)
 
         # extract agent from simulation
-        self.agent = self.sim.get_agent()
-        self.observation_space = self.agent.observation_space
-        self.action_space = self.agent.action_space
+        self.agents = self.sim.get_agents()
+        self.observation_space = spaces.Dict({agent_name: agent.observation_space for agent_name, agent in self.agents.items()})
+        self.action_space = spaces.Dict({agent_name: agent.action_space for agent_name, agent in self.agents.items()})
 
     def initialize_simulation(self):
         if self.sim is None:
             # initialize a new simulation
-            self.sim = Simulator(self.episode.scene, self.episode.robot)
+            self.sim = Simulator(self.episode.scene, self.episode.robots)
         else:
             # swap to new specifications.
-            self.sim.swap_specs(self.episode.scene, self.episode.robot)
+            self.sim.swap_specs(self.episode.scene, self.episode.robots)
 
         # initialize parameters for rendering
         self.__initialize_renderer()
 
-    def do_simulation(self, ctrl, n_frames):
+    def do_simulation(self, ctrl: Dict[str, ActType], n_frames: int):
         """
         Step the simulation n number of frames and applying a control action.
         """
         # Check control input is contained in the action space
-        if np.array(ctrl).shape != self.action_space.shape:
-            raise ValueError(
-                f"Action dimension mismatch. Expected {self.action_space.shape}, found {np.array(ctrl).shape}"
-            )
-
-        # set action in agent
-        self.agent.set_action(ctrl)
+        for agent_name, action in ctrl.items():
+            #TODO check action dimension per agent
+            # if np.array(action).shape != self.action_space.shape:
+            #     raise ValueError(
+            #         f"Action dimension mismatch for {agent_name}. Expected {self.action_space.shape}, found {np.array(action).shape}")
+            self.agents[agent_name].set_action(action)
 
         # step simulation desired number of frames
         self.sim.step(n_frames)
@@ -234,16 +234,6 @@ class GymJoCoEnv(Env, EzPickle):
     def __set_next_episode(self):
         new_episode = self.episode_sampler.sample()
         self.set_episode(new_episode)
-
-    def __set_observation_space(self):
-        # empty dict not allowed. use empty box
-        self.observation_space = self.agent.observation_space
-
-    def __set_action_space(self):
-        bounds = self.sim.model.actuator_ctrlrange.copy().astype(np.float64)
-        low, high = bounds.T
-        self.action_space = spaces.Box(low=low, high=high, dtype=np.float64)
-        return self.action_space
 
     def __initialize_renderer(self):
         # set metadata FPS according to the timestep actual clock time
@@ -271,6 +261,11 @@ class GymJoCoEnv(Env, EzPickle):
     def __get_info_dict(self) -> InfoDict:
         return dict(
             task=self.task.get_info(),
-            agent=self.agent.get_info(),
-            privileged=self.sim.get_privileged_info() if self.episode.robot.privileged_info else {}
+            agents={agent_name: agent.get_info() for agent_name, agent in self.agents.items()},
+            privileged={
+                agent_name: self.sim.get_privileged_info()
+                if self.episode.robots[agent_name].privileged_info
+                else {}
+                for agent_name in self.agents.keys()
+            }
         )
