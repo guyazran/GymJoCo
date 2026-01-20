@@ -17,8 +17,8 @@
     <body name="cubeG">
       <geom mesh="cubeG_0" material="Material.001" class="visual"/>
       <geom mesh="cubeG_1" material="Material" class="visual" rgba="1 0.8 0.8 1"/>
-      <geom mesh="cubeG_0" class="collision"/>
-      <geom mesh="cubeG_1" class="collision" name="cubeG"/>
+      
+      <geom class="collision" pos="0.00027 -0.000078 0.040286" size="0.04 0.04 0.04" name="cubeG"/>
     </body>
   </worldbody>
 </mujoco>
